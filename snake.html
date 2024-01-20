@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake</title>
+    <style>
+        * {
+            margin: 0 auto;
+            padding: 0;
+        }
+
+        #main {
+            position: relative;
+            height: 100vh;
+        }
+
+        .cell {
+            position: relative;
+            border: 1px solid black;
+            width: 18px;
+            height: 18px;
+            background-color: green;
+            float: left;
+            font-size: 20px;
+            text-align: center;
+            background-size: cover;
+        }
+
+        .wall {
+            background-color: darkgreen;
+            background-image: url("img/leaves.png");
+        }
+    </style>
+</head>
+
+<body onkeydown="kDown(event)">
+    <div id="main"></div>
+
+    <script>
+        var startX = 5;
+        var startY = 5;
+        var snakeLen = 1;
+        var direction = "right";
+        var boardSize = 10;
+        var table = [];
+        generateTable();
+        renderBoard();
+        updateBoard();
+
+        //tworzenie planszy
+        function renderBoard() {
+            if (document.getElementById("board")) document.getElementById("board").remove();
+            var main = document.getElementById("main");
+            var board = document.createElement("div");
+            board.id = "board";
+            board.style.width = 20 * (boardSize + 2) + "px";
+            board.style.height = 20 * (boardSize + 2) + "px";
+            for (let i = 0; i < boardSize + 2; i++) {
+                for (let j = 0; j < boardSize + 2; j++) {
+                    var cell = document.createElement("div");
+                    cell.id = i + "_" + j;
+                    if (i == 0 || j == 0 || i == boardSize + 1 || j == boardSize + 1) cell.classList.add("wall");
+                    cell.classList.add("cell");
+                    board.appendChild(cell);
+                }
+            }
+            main.appendChild(board)
+        }
+
+        //aktualizacja wyświetlania planszy
+        function updateBoard() {
+            for (let i = 0; i < boardSize + 2; i++) {
+                for (let j = 0; j < boardSize + 2; j++) {
+                    var cell = document.getElementById(i + "_" + j)
+                    if (snakeLen > 2 && table[i][j] == snakeLen) {
+                        cell.style.backgroundColor = "lightgrey";
+                    }
+                    else if (table[i][j] > 1) {
+                        cell.style.backgroundColor = "lightgrey";
+                        cell.style.backgroundImage = "url(img/creeperBody.png";
+                    }
+
+                    if (table[i][j] == 0) {
+                        cell.style.backgroundColor = "lightgrey";
+                        cell.style.backgroundImage = "";
+                        cell.style.transform = "";
+                    }
+                    if (table[i][j] == -1) {
+                        cell.style.backgroundImage = "url(img/apple.png)";
+                        cell.style.transform = "";
+                    }
+                    if (table[i][j] == 1 && direction == "right") {
+                        cell.style.backgroundImage = "url(img/creeperHead.png)";
+                        cell.style.transform = "rotate(270deg)";
+                    }
+                    if (table[i][j] == 1 && direction == "left") {
+                        cell.style.backgroundImage = "url(img/creeperHead.png)";
+                        cell.style.transform = "rotate(90deg)";
+                    }
+                    if (table[i][j] == 1 && direction == "up") {
+                        cell.style.backgroundImage = "url(img/creeperHead.png)";
+                        cell.style.transform = "rotate(180deg)";
+                    }
+                    if (table[i][j] == 1 && direction == "down") {
+                        cell.style.backgroundImage = "url(img/creeperHead.png)";
+                        cell.style.transform = "rotate(0deg)";
+                    }
+                    if ((table[i]?.[j - 1] - table[i - 1]?.[j] == 2 || table[i]?.[j - 1] - table[i - 1]?.[j] == -2) && table[i]?.[j - 1] > 0 && table[i - 1]?.[j] > 0 && table[i][j] > 0 && ((table[i]?.[j - 1] > table[i][j] && table[i][j] > table[i - 1]?.[j]) || (table[i]?.[j - 1] < table[i][j] && table[i][j] < table[i - 1]?.[j]))) {
+                        cell.style.backgroundImage = "url(img/creeperBodyLG.png)";
+                        cell.style.transform = "";
+                    }
+                    if ((table[i]?.[j - 1] - table[i + 1]?.[j] == 2 || table[i]?.[j - 1] - table[i + 1]?.[j] == -2) && table[i]?.[j - 1] > 0 && table[i + 1]?.[j] > 0 && table[i][j] > 0 && ((table[i]?.[j - 1] > table[i][j] && table[i][j] > table[i + 1]?.[j]) || (table[i]?.[j - 1] < table[i][j] && table[i][j] < table[i + 1]?.[j]))) {
+                        cell.style.backgroundImage = "url(img/creeperBodyLD.png)";
+                        cell.style.transform = "";
+                    }
+                    if ((table[i]?.[j + 1] - table[i - 1]?.[j] == 2 || table[i]?.[j + 1] - table[i - 1]?.[j] == -2) && table[i]?.[j + 1] > 0 && table[i - 1]?.[j] > 1 && table[i][j] > 0 && ((table[i]?.[j + 1] > table[i][j] && table[i][j] > table[i - 1]?.[j]) || (table[i]?.[j + 1] < table[i][j] && table[i][j] < table[i - 1]?.[j]))) {
+                        cell.style.backgroundImage = "url(img/creeperBodyPG.png)";
+                        cell.style.transform = "";
+                    }
+                    if ((table[i]?.[j + 1] - table[i + 1]?.[j] == 2 || table[i]?.[j + 1] - table[i + 1]?.[j] == -2) && table[i]?.[j + 1] > 0 && table[i + 1]?.[j] > 0 && table[i][j] > 0 && ((table[i]?.[j + 1] > table[i][j] && table[i][j] > table[i + 1]?.[j]) || (table[i]?.[j + 1] < table[i][j] && table[i][j] < table[i + 1]?.[j]))) {
+                        cell.style.backgroundImage = "url(img/creeperBodyPD.png)";
+                        cell.style.transform = "";
+                    }
+                }
+            }
+        }
+
+        // wygenerowanie planszy
+        function generateTable() {
+            table = [];
+            for (i = 0; i < boardSize + 2; i++) {
+                table[i] = [];
+                for (j = 0; j < boardSize + 2; j++) {
+                    if (i > 0 && i < boardSize + 1 && j > 0 && j < boardSize + 1) table[i][j] = 0;
+                    else table[i][j] = "wall";
+                }
+            }
+            table[startX][startY] = 1;
+
+        }
+        var start = 0;
+        var lastDirection = "right";
+        // zmiana kierunku
+        function kDown(e) {
+            lastDirection = direction;
+            if (e.code == "ArrowUp") direction = "up";
+            if (e.code == "ArrowDown") direction = "down";
+            if (e.code == "ArrowRight") direction = "right";
+            if (e.code == "ArrowLeft") direction = "left";
+            if (start == 0) {
+                snake();
+                start = 1;
+            }
+        }
+
+        // ruchy snakea
+        function snake() {
+            var g = setInterval(() => {
+                if (direction == "up") startX--;
+                if (direction == "down") startX++;
+                if (direction == "right") startY++;
+                if (direction == "left") startY--;
+                for (i = 1; i < boardSize + 1; i++) {
+                    for (j = 1; j < boardSize + 1; j++) {
+                        if (table[i][j] > 0) table[i][j]++;
+                        if (table[i][j] > snakeLen) table[i][j] = 0;
+                    }
+                }
+                food();
+                if (table[startX][startY] > 0 || table[startX][startY] == "wall") {
+                    alert("Przegrana. Wynik: " + snakeLen)
+                    clearInterval(g)
+                }
+                table[startX][startY] = 1;
+                updateBoard();
+            }, 200);
+        }
+
+        // jedzenie 
+        var foods = 0
+        function food() {
+            if (foods == 0) {
+                var x = this.getRandomInt(1, boardSize);
+                var y = this.getRandomInt(1, boardSize);
+                while (table[y][x] > 0) {
+                    x = this.getRandomInt(1, boardSize);
+                    y = this.getRandomInt(1, boardSize);
+                }
+                table[y][x] = -1;
+                foods = 1;
+            }
+            if (table[startX][startY] == -1) {
+                snakeLen++;
+                foods = 0;
+            }
+        }
+
+        // funkcja random
+        function getRandomInt(min, max) {
+            min = Math.ceil(min);
+            max = Math.floor(max);
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+    </script>
+</body>
+
+</html>
